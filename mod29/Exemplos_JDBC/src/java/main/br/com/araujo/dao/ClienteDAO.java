@@ -6,9 +6,12 @@ package br.com.araujo.dao;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
 
 import br.com.araujo.dao.jdbc.ConnectionFactory;
 import br.com.araujo.domain.Cliente;
+import br.com.araujo.domain.Produto;
 
 public class ClienteDAO implements IClienteDAO {
 
@@ -67,6 +70,30 @@ public class ClienteDAO implements IClienteDAO {
 	}
 
 	@Override
+	public Integer atualizar(Cliente cliente) throws Exception {
+		Connection connection = null;
+		PreparedStatement stm = null;
+		try {
+			connection = ConnectionFactory.getConnection();
+			String sql = "UPDATE TB_CLIENTE SET CODIGO = ?, NOME = ? WHERE id = ?";
+			stm = connection.prepareStatement(sql);
+			stm.setString(1, cliente.getCodigo());
+			stm.setString(2, cliente.getNome());
+			stm.setLong(3, cliente.getId());
+			return stm.executeUpdate();
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			if (stm != null && !stm.isClosed()) {
+				stm.close();
+			}
+			if (connection != null && !connection.isClosed()) {
+				connection.close();
+			}
+		}
+	}
+
+	@Override
 	public Integer excluir(Cliente cliente) throws Exception {
 		Connection connection = null;
 		PreparedStatement stm = null;
@@ -86,6 +113,40 @@ public class ClienteDAO implements IClienteDAO {
 				connection.close();
 			}
 		}
+	}
+
+	@Override
+	public List<Cliente> buscarTodos() throws Exception {
+		List<Cliente> clientes = new ArrayList<>();
+		Connection connection = null;
+		PreparedStatement stm = null;
+		ResultSet rs = null;
+		try {
+			connection = ConnectionFactory.getConnection();
+			String sql = "SELECT ID, CODIGO, NOME FROM TB_CLIENTE";
+			stm = connection.prepareStatement(sql);
+			rs = stm.executeQuery();
+			while (rs.next()) {
+				Cliente cliente = new Cliente();
+				cliente.setId(rs.getLong("ID"));
+				cliente.setCodigo(rs.getString("CODIGO"));
+				cliente.setNome(rs.getString("NOME"));
+				clientes.add(cliente);
+			}
+		} catch (Exception e) {
+			throw e;
+		} finally {
+			if (rs != null && !rs.isClosed()) {
+				rs.close();
+			}
+			if (stm != null && !stm.isClosed()) {
+				stm.close();
+			}
+			if (connection != null && !connection.isClosed()) {
+				connection.close();
+			}
+		}
+		return clientes;
 	}
 
 }
